@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/category_battery">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="chargeLimitEnabled"
+            android:title="@string/charge_limit_enabled"/>
+
+        <EditTextPreference
+            android:defaultValue="100"
+            android:key="chargeLimit"
+            android:dialogTitle="@string/charge_limit"
+            android:inputType="number"
+            android:summary="@string/charge_limit_summary"
+            android:title="@string/charge_limit" />
+
+    </PreferenceCategory>
+    
+</PreferenceScreen>
