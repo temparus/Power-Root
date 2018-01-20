@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import ch.temparus.powerroot.fragments.AboutFragment
+import ch.temparus.powerroot.fragments.ConfigurationFragment
+import ch.temparus.powerroot.services.BatteryService
 
 
 class MainActivity : AppCompatActivity() {
@@ -19,6 +22,7 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.navigation_update -> {
                 // mTextMessage!!.setText(R.string.title_dashboard)
+                BatteryService.start(this)
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_about -> {

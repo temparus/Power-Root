@@ -1,8 +1,9 @@
-package ch.temparus.powerroot
+package ch.temparus.powerroot.fragments
 
 
 import android.os.Bundle
 import android.support.v14.preference.PreferenceFragment
+import ch.temparus.powerroot.R
 
 
 /**
@@ -27,6 +28,10 @@ class ConfigurationFragment : PreferenceFragment() {
         fun newInstance(): ConfigurationFragment {
             return ConfigurationFragment()
         }
+
+        val BATTERY_CHARGE_LIMIT_ENABLED = "batteryChargeLimitEnabled"
+        val BATTERY_CHARGE_LIMIT = "batteryChargeLimit"
+        val BATTERY_RECHARGE_THRESHOLD = "batteryRechargeThreshold"
     }
 
 }// Required empty public constructor

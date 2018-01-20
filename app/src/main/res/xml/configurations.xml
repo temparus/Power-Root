@@ -5,17 +5,25 @@
 
         <SwitchPreference
             android:defaultValue="false"
-            android:key="chargeLimitEnabled"
+            android:key="batteryChargeLimitEnabled"
             android:title="@string/charge_limit_enabled"/>
 
         <EditTextPreference
-            android:defaultValue="100"
-            android:key="chargeLimit"
+            android:defaultValue="80"
+            android:key="batteryChargeLimit"
             android:dialogTitle="@string/charge_limit"
             android:inputType="number"
             android:summary="@string/charge_limit_summary"
             android:title="@string/charge_limit" />
 
+        <EditTextPreference
+            android:defaultValue="75"
+            android:key="batteryRechargeThreshold"
+            android:dialogTitle="@string/recharge_threshold"
+            android:inputType="number"
+            android:summary="@string/recharge_threshold_summary"
+            android:title="@string/recharge_threshold" />
+
     </PreferenceCategory>
-    
+
 </PreferenceScreen>

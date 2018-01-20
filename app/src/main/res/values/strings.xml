@@ -11,4 +11,6 @@
     <string name="charge_limit_enabled">Enable Charge Limitation</string>
     <string name="charge_limit">Charge Limit</string>
     <string name="charge_limit_summary">Maximum capacity the battery will be charged to</string>
+    <string name="recharge_threshold">Recharge Threshold</string>
+    <string name="recharge_threshold_summary">Starts charging the battery if the charge falls below threshold</string>
 </resources>

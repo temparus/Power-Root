@@ -1,10 +1,11 @@
-package ch.temparus.powerroot
+package ch.temparus.powerroot.fragments
 
 import android.app.Fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import ch.temparus.powerroot.R
 
 /**
  * A simple [Fragment] subclass to show the About layout.
