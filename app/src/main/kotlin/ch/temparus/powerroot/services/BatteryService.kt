@@ -114,7 +114,7 @@ class BatteryService : Service() {
     }
 
     companion object {
-        const private val CHANGE_PENDING_TIMEOUT_MS: Long = 300
+        const private val CHANGE_PENDING_TIMEOUT_MS: Long = 1000
         const private val CHARGING_CHANGE_DELAY_MS: Long = 500
         const private val POWER_SUPPLY_CHANGE_DELAY_MS: Long = 3000
         const val CONTROL_FILE = "/sys/class/power_supply/battery/charging_enabled"
