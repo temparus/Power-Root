@@ -35,6 +35,12 @@ class BatteryService : Service() {
         val pendingIntentApp = PendingIntent.getActivity(this, 0, notificationIntent, 0)
         val pendingIntentDisable = PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_CANCEL_CURRENT)
 
+        val contentIntent = PendingIntent.getActivity(
+                applicationContext,
+                0,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT)
+
         val notification = mNotificationBuilder
                 .setPriority(Notification.PRIORITY_MAX)
                 .setCategory(Notification.CATEGORY_SYSTEM)
@@ -42,7 +48,8 @@ class BatteryService : Service() {
                 .addAction(0, "Open App", pendingIntentApp)
                 .setOngoing(true)
                 .setContentTitle("Please wait!")
-                .setContentInfo("Please wait!")
+                .setContentText("Show Power Root!")
+                .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.ic_dashboard_black_24dp)
                 .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
                 .build()
