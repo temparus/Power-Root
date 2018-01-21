@@ -1,12 +1,12 @@
 package ch.temparus.powerroot.services
 
-import android.app.Notification
-import android.app.PendingIntent
-import android.app.Service
+import android.annotation.TargetApi
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.support.v4.content.ContextCompat
@@ -16,6 +16,9 @@ import ch.temparus.powerroot.MainActivity
 import ch.temparus.powerroot.R
 import ch.temparus.powerroot.SharedMethods
 import ch.temparus.powerroot.receivers.BatteryReceiver
+import android.app.NotificationManager
+import android.support.v4.app.NotificationCompat
+import android.app.NotificationChannel
 
 /**
  * An [Service] subclass for asynchronously monitor battery
@@ -23,7 +26,7 @@ import ch.temparus.powerroot.receivers.BatteryReceiver
  */
 class BatteryService : Service() {
 
-    private val mNotificationBuilder by lazy(LazyThreadSafetyMode.NONE) {Notification.Builder(this)}
+    private var mNotificationBuilder: NotificationCompat.Builder? = null
     private var mNotificationId = 1
     private var mBatteryReceiver: BatteryReceiver? = null
 
@@ -31,32 +34,118 @@ class BatteryService : Service() {
         Log.d("BatteryService", "Service started!")
         running = true
 
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntentApp = PendingIntent.getActivity(this, 0, notificationIntent, 0)
-        val pendingIntentDisable = PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+        mBatteryReceiver = BatteryReceiver(this@BatteryService)
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(Intent.ACTION_BATTERY_CHANGED)
+        intentFilter.addAction(ACTION_BATTERY_BOOST)
+        intentFilter.addAction(ACTION_BATTERY_CHARGE)
+        intentFilter.addAction(ACTION_BATTERY_STOP)
+        registerReceiver(mBatteryReceiver, intentFilter)
 
+        createNotification()
+    }
+
+    private fun createNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannelOreo(NOTIFICATION_CHANNEL_ID)
+        }
+        mNotificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+
+        val showActivityIntent = Intent(this, MainActivity::class.java)
         val contentIntent = PendingIntent.getActivity(
-                applicationContext,
+                this,
                 0,
-                notificationIntent,
+                showActivityIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val notification = mNotificationBuilder
-                .setPriority(Notification.PRIORITY_MAX)
-                .setCategory(Notification.CATEGORY_SYSTEM)
-                .addAction(0, "Disable", pendingIntentDisable)
-                .addAction(0, "Open App", pendingIntentApp)
-                .setOngoing(true)
-                .setContentTitle("Please wait!")
-                .setContentText("Show Power Root!")
+        mNotificationBuilder!!
+                .setCategory(NotificationCompat.CATEGORY_SYSTEM)
                 .setContentIntent(contentIntent)
-                .setSmallIcon(R.drawable.ic_dashboard_black_24dp)
-                .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
-                .build()
-        startForeground(mNotificationId, notification)
+                .setOngoing(true)
+                .setContentTitle("Battery Charge Control")
+                .setSmallIcon(R.drawable.ic_battery_charging_full_black_24dp)
+                .color = ContextCompat.getColor(this, R.color.colorPrimary)
+        @Suppress("DEPRECATION")
+        mNotificationBuilder!!.priority = Notification.PRIORITY_LOW
 
-        mBatteryReceiver = BatteryReceiver(this@BatteryService)
-        registerReceiver(mBatteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        updateNotification()
+    }
+
+    private fun updateNotification() {
+        if (mNotificationBuilder == null) {
+            createNotification()
+        }
+
+        mNotificationBuilder!!.mActions.clear()
+
+        val state = getControlState()
+
+        if (state == CONTROL_STATE_DISABLED || state == CONTROL_STATE_UNKNOWN) {
+            stopForeground(true)
+            return
+        }
+
+        if (state == CONTROL_STATE_STOP_FORCED) {
+            val chargePendingIntent = PendingIntent.getBroadcast(
+                    this,
+                    0,
+                    Intent(ACTION_BATTERY_CHARGE),
+                    PendingIntent.FLAG_UPDATE_CURRENT)
+            mNotificationBuilder!!.addAction(NotificationCompat.Action(
+                    android.R.drawable.ic_dialog_alert,
+                    "Charge Now",
+                    chargePendingIntent))
+        }
+
+        if (state == CONTROL_STATE_CHARGING || state == CONTROL_STATE_BOOST) {
+            val chargePendingIntent = PendingIntent.getBroadcast(
+                    this,
+                    0,
+                    Intent(ACTION_BATTERY_STOP),
+                    PendingIntent.FLAG_UPDATE_CURRENT)
+            mNotificationBuilder!!.addAction(NotificationCompat.Action(
+                    android.R.drawable.ic_dialog_alert,
+                    "Stop Charging",
+                    chargePendingIntent))
+        }
+
+        if (state == CONTROL_STATE_STOP || state == CONTROL_STATE_STOP_FORCED || state == CONTROL_STATE_CHARGING) {
+            val boostPendingIntent = PendingIntent.getBroadcast(
+                    this,
+                    0,
+                    Intent(ACTION_BATTERY_BOOST),
+                    PendingIntent.FLAG_UPDATE_CURRENT)
+            mNotificationBuilder!!.addAction(NotificationCompat.Action(
+                    android.R.drawable.ic_dialog_alert,
+                    "Boost Charge",
+                    boostPendingIntent))
+        }
+
+        mNotificationBuilder!!.mContentText =
+                when(state) {
+                    CONTROL_STATE_CHARGING -> "Charging"
+                    CONTROL_STATE_BOOST -> "Boost Charging"
+                    CONTROL_STATE_STOP -> "Charging limit reached"
+                    CONTROL_STATE_STOP_FORCED -> "Charging interrupted by user"
+                    else -> ""
+                }
+
+        startForeground(mNotificationId, mNotificationBuilder!!.build())
+    }
+
+    @TargetApi(26)
+    private fun createNotificationChannelOreo(channelId: String) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationChannel = NotificationChannel(
+                channelId,
+                "Battery Charging Notification",
+                NotificationManager.IMPORTANCE_LOW)
+
+        // Configure the notification channel.
+        notificationChannel.description = "Shows Battery Charging Information"
+        notificationChannel.enableLights(false)
+        notificationChannel.enableVibration(false)
+        notificationManager.createNotificationChannel(notificationChannel)
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -71,7 +160,8 @@ class BatteryService : Service() {
             Log.d("BatteryService", "State changed to $state")
             stateChange = System.currentTimeMillis()
             when(state) {
-                CONTROL_STATE_STOP -> {
+                CONTROL_STATE_STOP,
+                CONTROL_STATE_STOP_FORCED -> {
                     BatteryService.setChargerState(false)
                     Log.d("BatteryService", "Charger disabled")
                 }
@@ -86,6 +176,7 @@ class BatteryService : Service() {
                     Log.d("BatteryService", "Charger enabled (2)")
                 }
             }
+            updateNotification()
         }
         return hasChanged
     }
@@ -107,6 +198,7 @@ class BatteryService : Service() {
     override fun onDestroy() {
         // unregister the battery event receiver
         unregisterReceiver(mBatteryReceiver)
+        stopForeground(true)
 
         // make the BatteryReceiver and dependencies ready for garbage-collection
         mBatteryReceiver!!.detach()
@@ -121,17 +213,22 @@ class BatteryService : Service() {
     }
 
     companion object {
-        const private val CHANGE_PENDING_TIMEOUT_MS: Long = 1000
-        const private val CHARGING_CHANGE_DELAY_MS: Long = 500
-        const private val POWER_SUPPLY_CHANGE_DELAY_MS: Long = 3000
+        private const val NOTIFICATION_CHANNEL_ID: String = "PowerRootBatteryNotification"
+        private const val CHANGE_PENDING_TIMEOUT_MS: Long = 1000
+        private const val CHARGING_CHANGE_DELAY_MS: Long = 500
+        private const val POWER_SUPPLY_CHANGE_DELAY_MS: Long = 3000
         const val CONTROL_FILE = "/sys/class/power_supply/battery/charging_enabled"
 
-        @Suppress("MemberVisibilityCanPrivate")
+        const val ACTION_BATTERY_BOOST = "ch.temparus.powerroot.intent.ACTION_BATTERY_BOOST"
+        const val ACTION_BATTERY_CHARGE = "ch.temparus.powerroot.intent.ACTION_BATTERY_CHARGE"
+        const val ACTION_BATTERY_STOP = "ch.temparus.powerroot.intent.ACTION_BATTERY_STOP"
+
         const val CONTROL_STATE_UNKNOWN = -1
         const val CONTROL_STATE_DISABLED = 0
         const val CONTROL_STATE_STOP = 1
-        const val CONTROL_STATE_CHARGING = 2
-        const val CONTROL_STATE_BOOST = 3
+        const val CONTROL_STATE_STOP_FORCED = 2
+        const val CONTROL_STATE_CHARGING = 3
+        const val CONTROL_STATE_BOOST = 4
 
         private var running = false
         private var state = CONTROL_STATE_UNKNOWN

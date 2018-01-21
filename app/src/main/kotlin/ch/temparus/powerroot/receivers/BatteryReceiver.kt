@@ -50,6 +50,30 @@ class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver()
             return
         }
 
+        val state = service.getControlState()
+
+        if (intent.action == BatteryService.ACTION_BATTERY_STOP) {
+            if (state == BatteryService.CONTROL_STATE_CHARGING || state == BatteryService.CONTROL_STATE_BOOST) {
+                service.setControlState(BatteryService.CONTROL_STATE_STOP_FORCED)
+            }
+            return
+        }
+
+        if (intent.action == BatteryService.ACTION_BATTERY_CHARGE) {
+            if (state == BatteryService.CONTROL_STATE_STOP_FORCED) {
+                service.setControlState(BatteryService.CONTROL_STATE_CHARGING)
+            }
+            return
+        }
+
+        if (intent.action == BatteryService.ACTION_BATTERY_BOOST) {
+            if (state == BatteryService.CONTROL_STATE_STOP || state == BatteryService.CONTROL_STATE_STOP_FORCED ||
+                    state == BatteryService.CONTROL_STATE_CHARGING) {
+                service.setControlState(BatteryService.CONTROL_STATE_BOOST)
+            }
+            return
+        }
+
         val batteryLevel = BatteryService.getBatteryLevel(intent)
         val currentStatus = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN)
 
@@ -68,6 +92,9 @@ class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver()
                 if (currentStatus != BatteryManager.BATTERY_STATUS_CHARGING) {
                     service.setControlState(BatteryService.CONTROL_STATE_STOP)
                 }
+            }
+            BatteryService.CONTROL_STATE_STOP_FORCED -> {
+                // nothing to do here.
             }
             else -> {
                 // when the service was started or has been enabled, charge until limit
