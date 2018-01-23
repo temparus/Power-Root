@@ -9,7 +9,7 @@
             android:title="@string/charge_limit_enabled"/>
 
         <EditTextPreference
-            android:defaultValue="80"
+            android:defaultValue="85"
             android:key="batteryChargeLimit"
             android:dialogTitle="@string/charge_limit"
             android:inputType="number"
@@ -17,12 +17,18 @@
             android:title="@string/charge_limit" />
 
         <EditTextPreference
-            android:defaultValue="75"
+            android:defaultValue="80"
             android:key="batteryRechargeThreshold"
             android:dialogTitle="@string/recharge_threshold"
             android:inputType="number"
             android:summary="@string/recharge_threshold_summary"
             android:title="@string/recharge_threshold" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="batteryStatsAutoReset"
+            android:title="@string/battery_stats_auto_reset"
+            android:summary="@string/battery_stats_auto_reset_summary"/>
 
     </PreferenceCategory>
 

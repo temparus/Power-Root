@@ -13,4 +13,6 @@
     <string name="charge_limit_summary">Maximum capacity the battery will be charged to</string>
     <string name="recharge_threshold">Recharge Threshold</string>
     <string name="recharge_threshold_summary">Starts charging the battery if the charge falls below threshold</string>
+    <string name="battery_stats_auto_reset">Reset Battery Statistics</string>
+    <string name="battery_stats_auto_reset_summary">Automatically resets the  battery statistics when the limit is reached.</string>
 </resources>
