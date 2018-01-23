@@ -92,7 +92,7 @@ class BatteryService : Service() {
                     Intent(ACTION_BATTERY_CHARGE),
                     PendingIntent.FLAG_UPDATE_CURRENT)
             mNotificationBuilder!!.addAction(NotificationCompat.Action(
-                    android.R.drawable.ic_dialog_alert,
+                    0,
                     "Charge Now",
                     chargePendingIntent))
         }
@@ -104,7 +104,7 @@ class BatteryService : Service() {
                     Intent(ACTION_BATTERY_STOP),
                     PendingIntent.FLAG_UPDATE_CURRENT)
             mNotificationBuilder!!.addAction(NotificationCompat.Action(
-                    android.R.drawable.ic_dialog_alert,
+                    0,
                     "Stop Charging",
                     chargePendingIntent))
         }
@@ -116,7 +116,7 @@ class BatteryService : Service() {
                     Intent(ACTION_BATTERY_BOOST),
                     PendingIntent.FLAG_UPDATE_CURRENT)
             mNotificationBuilder!!.addAction(NotificationCompat.Action(
-                    android.R.drawable.ic_dialog_alert,
+                    0,
                     "Boost Charge",
                     boostPendingIntent))
         }
@@ -164,6 +164,7 @@ class BatteryService : Service() {
                 CONTROL_STATE_STOP_FORCED -> {
                     BatteryService.setChargerState(false)
                     Log.d("BatteryService", "Charger disabled")
+                    stopIfUnplugged(true)
                 }
                 CONTROL_STATE_CHARGING,
                 CONTROL_STATE_BOOST -> {
@@ -185,12 +186,17 @@ class BatteryService : Service() {
         return BatteryService.state
     }
 
-    private fun stopIfUnplugged() {
+    private fun stopIfUnplugged(repeat: Boolean = false) {
         val triggerState = getControlState()
         Handler().postDelayed({
             // continue only if the state didn't change in the meantime
-            if (triggerState == getControlState() && !SharedMethods.isDevicePluggedIn(this)) {
-                stopSelf()
+            if (triggerState == getControlState()) {
+                if (!SharedMethods.isDevicePluggedIn(this)) {
+                    setControlState(CONTROL_STATE_UNKNOWN)
+                    stopSelf()
+                } else if (repeat) {
+                    stopIfUnplugged(repeat)
+                }
             }
         }, POWER_SUPPLY_CHANGE_DELAY_MS)
     }
@@ -217,7 +223,8 @@ class BatteryService : Service() {
         private const val CHANGE_PENDING_TIMEOUT_MS: Long = 1000
         private const val CHARGING_CHANGE_DELAY_MS: Long = 500
         private const val POWER_SUPPLY_CHANGE_DELAY_MS: Long = 3000
-        const val CONTROL_FILE = "/sys/class/power_supply/battery/charging_enabled"
+        private const val CONTROL_FILE = "/sys/class/power_supply/battery/charging_enabled"
+        const val POWER_SUPPLY_DIRECTORY = "/sys/class/power_supply"
 
         const val ACTION_BATTERY_BOOST = "ch.temparus.powerroot.intent.ACTION_BATTERY_BOOST"
         const val ACTION_BATTERY_CHARGE = "ch.temparus.powerroot.intent.ACTION_BATTERY_CHARGE"
