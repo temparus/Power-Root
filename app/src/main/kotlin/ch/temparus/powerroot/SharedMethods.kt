@@ -22,9 +22,18 @@ object SharedMethods {
     fun readControlFile(file: String): List<String> {
         return try {
             Shell.SU.run(arrayOf("cat", file).joinToString(" "))
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             listOf()
         }
+    }
+
+    fun executeRootCommand(command: String) {
+        rootShell.addCommand(command)
+    }
+
+    fun executeRootCommand(command: String, code: Int,
+                            onCommandResultListener: Shell.OnCommandResultListener) {
+        rootShell.addCommand(command, code, onCommandResultListener)
     }
 
     fun isDevicePluggedIn(context: Context): Boolean {
@@ -33,7 +42,8 @@ object SharedMethods {
         val batteryStatus = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
         val connectionStatus = batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
 
-        return (batteryStatus == BatteryManager.BATTERY_STATUS_CHARGING || connectionStatus > 0 || hasExternalPowerSupply())
+        return (batteryStatus == BatteryManager.BATTERY_STATUS_CHARGING ||
+                connectionStatus > 0 || hasExternalPowerSupply())
     }
 
     private fun hasExternalPowerSupply(): Boolean {

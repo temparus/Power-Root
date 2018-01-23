@@ -5,7 +5,6 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -19,6 +18,8 @@ import ch.temparus.powerroot.receivers.BatteryReceiver
 import android.app.NotificationManager
 import android.support.v4.app.NotificationCompat
 import android.app.NotificationChannel
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
 
 /**
  * An [Service] subclass for asynchronously monitor battery
@@ -27,13 +28,16 @@ import android.app.NotificationChannel
 class BatteryService : Service() {
 
     private var mNotificationBuilder: NotificationCompat.Builder? = null
+    private var mConfiguration: SharedPreferences? = null
     private var mNotificationId = 1
     private var mBatteryReceiver: BatteryReceiver? = null
+    private var mAutoReset = false
 
     override fun onCreate() {
         Log.d("BatteryService", "Service started!")
         running = true
 
+        mConfiguration = PreferenceManager.getDefaultSharedPreferences(this)
         mBatteryReceiver = BatteryReceiver(this@BatteryService)
         val intentFilter = IntentFilter()
         intentFilter.addAction(Intent.ACTION_BATTERY_CHANGED)
@@ -164,6 +168,9 @@ class BatteryService : Service() {
                 CONTROL_STATE_STOP_FORCED -> {
                     BatteryService.setChargerState(false)
                     Log.d("BatteryService", "Charger disabled")
+                    if (state == CONTROL_STATE_STOP) {
+                        mAutoReset = true
+                    }
                     stopIfUnplugged(true)
                 }
                 CONTROL_STATE_CHARGING,
@@ -192,6 +199,7 @@ class BatteryService : Service() {
             // continue only if the state didn't change in the meantime
             if (triggerState == getControlState()) {
                 if (!SharedMethods.isDevicePluggedIn(this)) {
+                    resetBatteryStatsIfFull()
                     setControlState(CONTROL_STATE_UNKNOWN)
                     stopSelf()
                 } else if (repeat) {
@@ -199,6 +207,12 @@ class BatteryService : Service() {
                 }
             }
         }, POWER_SUPPLY_CHANGE_DELAY_MS)
+    }
+
+    private fun resetBatteryStatsIfFull() {
+        if (mAutoReset && mConfiguration?.getBoolean(BATTERY_STATS_AUTO_RESET, true) == true) {
+            BatteryService.resetBatteryStats()
+        }
     }
 
     override fun onDestroy() {
@@ -219,6 +233,7 @@ class BatteryService : Service() {
     }
 
     companion object {
+        // Static configuration
         private const val NOTIFICATION_CHANNEL_ID: String = "PowerRootBatteryNotification"
         private const val CHANGE_PENDING_TIMEOUT_MS: Long = 1000
         private const val CHARGING_CHANGE_DELAY_MS: Long = 500
@@ -226,10 +241,18 @@ class BatteryService : Service() {
         private const val CONTROL_FILE = "/sys/class/power_supply/battery/charging_enabled"
         const val POWER_SUPPLY_DIRECTORY = "/sys/class/power_supply"
 
+        // SharedPreferences
+        const val BATTERY_CHARGE_LIMIT_ENABLED = "batteryChargeLimitEnabled"
+        const val BATTERY_CHARGE_LIMIT = "batteryChargeLimit"
+        const val BATTERY_RECHARGE_THRESHOLD = "batteryRechargeThreshold"
+        const val BATTERY_STATS_AUTO_RESET = "batteryStatsAutoReset"
+
+        // Intent actions
         const val ACTION_BATTERY_BOOST = "ch.temparus.powerroot.intent.ACTION_BATTERY_BOOST"
         const val ACTION_BATTERY_CHARGE = "ch.temparus.powerroot.intent.ACTION_BATTERY_CHARGE"
         const val ACTION_BATTERY_STOP = "ch.temparus.powerroot.intent.ACTION_BATTERY_STOP"
 
+        // BatteryService control states
         const val CONTROL_STATE_UNKNOWN = -1
         const val CONTROL_STATE_DISABLED = 0
         const val CONTROL_STATE_STOP = 1
@@ -259,15 +282,8 @@ class BatteryService : Service() {
             return System.currentTimeMillis() - stateChange < CHANGE_PENDING_TIMEOUT_MS
         }
 
-        fun getBatteryLevel(batteryIntent: Intent): Int {
-            val level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-            val scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-
-            return if (level == -1 || scale == -1) {
-                100
-            } else {
-                level * 100 / scale
-            }
+        fun resetBatteryStats() {
+            SharedMethods.executeRootCommand("dumpsys batterystats --reset")
         }
 
         fun start(context: Context) {

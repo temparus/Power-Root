@@ -4,8 +4,6 @@ import android.content.*
 import android.os.BatteryManager
 import android.preference.PreferenceManager
 import android.util.Log
-import ch.temparus.powerroot.SharedMethods
-import ch.temparus.powerroot.fragments.ConfigurationFragment
 import ch.temparus.powerroot.services.BatteryService
 
 
@@ -20,14 +18,13 @@ class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver()
 
     init {
         preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
-            Log.d("BatteryReceiver", "SharedPreference '$key' has changed!")
             when (key) {
-                ConfigurationFragment.BATTERY_RECHARGE_THRESHOLD -> {
+                BatteryService.BATTERY_RECHARGE_THRESHOLD -> {
                     service.setControlState(BatteryService.CONTROL_STATE_UNKNOWN)
                     reset(sharedPreferences)
                 }
-                ConfigurationFragment.BATTERY_CHARGE_LIMIT_ENABLED,
-                ConfigurationFragment.BATTERY_CHARGE_LIMIT -> {
+                BatteryService.BATTERY_CHARGE_LIMIT_ENABLED,
+                BatteryService.BATTERY_CHARGE_LIMIT -> {
                     reset(sharedPreferences)
                 }
             }
@@ -37,9 +34,9 @@ class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver()
     }
 
     private fun reset(configuration: SharedPreferences) {
-        limitPercentage = Integer.parseInt(configuration.getString(ConfigurationFragment.BATTERY_CHARGE_LIMIT, "80"))
-        rechargePercentage = Integer.parseInt(configuration.getString(ConfigurationFragment.BATTERY_RECHARGE_THRESHOLD, (limitPercentage - 5).toString()))
-        enabled = configuration.getBoolean(ConfigurationFragment.BATTERY_CHARGE_LIMIT_ENABLED, false)
+        limitPercentage = Integer.parseInt(configuration.getString(BatteryService.BATTERY_CHARGE_LIMIT, "80"))
+        rechargePercentage = Integer.parseInt(configuration.getString(BatteryService.BATTERY_RECHARGE_THRESHOLD, (limitPercentage - 5).toString()))
+        enabled = configuration.getBoolean(BatteryService.BATTERY_CHARGE_LIMIT_ENABLED, false)
         // manually fire onReceive() to update state if service is enabled
         onReceive(service, service.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)))
     }
@@ -74,7 +71,7 @@ class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver()
             return
         }
 
-        val batteryLevel = BatteryService.getBatteryLevel(intent)
+        val batteryLevel = getBatteryLevel(intent)
         val currentStatus = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN)
 
         when (service.getControlState()) {
@@ -104,6 +101,17 @@ class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver()
                     service.setControlState(BatteryService.CONTROL_STATE_CHARGING)
                 }
             }
+        }
+    }
+
+    fun getBatteryLevel(batteryIntent: Intent): Int {
+        val level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+
+        return if (level == -1 || scale == -1) {
+            100
+        } else {
+            level * 100 / scale
         }
     }
 
