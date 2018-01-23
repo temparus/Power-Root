@@ -6,25 +6,33 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import ch.temparus.powerroot.services.BatteryService
 import eu.chainfire.libsuperuser.Shell
+import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
 
-@Suppress("MemberVisibilityCanPrivate")
+@Suppress("MemberVisibilityCanBePrivate")
 /**
  * Utility methods shared between multiple classes
  */
 object SharedMethods {
 
     private val rootShell: Shell.Interactive = Shell.Builder().setWantSTDERR(false).useSU().open()
+    private var powerSupplyPathList: List<String>? = null
 
     fun writeControlFile(file: String, content: String) {
         rootShell.addCommand(arrayOf("mount -o rw,remount $file", "echo \"$content\" > $file"))
     }
 
     fun readControlFile(file: String): List<String> {
-        return try {
-            Shell.SU.run(arrayOf("cat", file).joinToString(" "))
-        } catch (e: Exception) {
-            listOf()
+        val content: List<String>
+        try {
+            val inputStream = FileInputStream(File(file))
+            content = inputStream.bufferedReader().use { it.readText() }.split('\n')
+            inputStream.close()
+        } catch (ex: IOException) {
+            return listOf()
         }
+        return content
     }
 
     fun executeRootCommand(command: String) {
@@ -47,23 +55,27 @@ object SharedMethods {
     }
 
     private fun hasExternalPowerSupply(): Boolean {
-        val powerSupplyDirectory = BatteryService.POWER_SUPPLY_DIRECTORY
+        if (powerSupplyPathList == null) {
+            val powerSupplyDirectory = BatteryService.POWER_SUPPLY_DIRECTORY
 
-        try {
-            val directoryContent = Shell.SU.run("find -L $powerSupplyDirectory -maxdepth 1 -type d")
-            if (!directoryContent.isEmpty() && directoryContent[0] == powerSupplyDirectory) {
-                directoryContent.removeAt(0)
+            try {
+                val directoryContent = Shell.SU.run("find -L $powerSupplyDirectory -maxdepth 1 -type d")
+                if (!directoryContent.isEmpty() && directoryContent[0] == powerSupplyDirectory) {
+                    directoryContent.removeAt(0)
+                }
+                powerSupplyPathList = directoryContent
+            } catch(e: Exception) {
+                return true
             }
-            directoryContent.forEach {
-                if (!it.contains("battery")) {
-                    val content = readControlFile("$it/present").joinToString("")
-                    if (content.isNotBlank() && Integer.parseInt(content) == 1) {
-                        return true
-                    }
+        }
+
+        powerSupplyPathList?.forEach {
+            if (!it.contains("battery")) {
+                val content = readControlFile("$it/present").joinToString("")
+                if (content.isNotBlank() && Integer.parseInt(content) == 1) {
+                    return true
                 }
             }
-        } catch(e: Exception) {
-            return false
         }
         return false
     }
