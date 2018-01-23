@@ -43,5 +43,9 @@ class MainActivity : AppCompatActivity() {
 
         val navigation = findViewById<View>(R.id.navigation) as BottomNavigationView
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
+
+        val transaction = fragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_container, ConfigurationFragment.newInstance())
+        transaction.commit()
     }
 }
