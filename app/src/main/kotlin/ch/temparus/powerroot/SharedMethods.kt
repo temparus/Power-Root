@@ -40,7 +40,7 @@ object SharedMethods {
     }
 
     fun executeRootCommand(command: String, code: Int,
-                            onCommandResultListener: Shell.OnCommandResultListener) {
+                           onCommandResultListener: Shell.OnCommandResultListener) {
         rootShell.addCommand(command, code, onCommandResultListener)
     }
 
@@ -64,7 +64,7 @@ object SharedMethods {
                     directoryContent.removeAt(0)
                 }
                 powerSupplyPathList = directoryContent
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 return true
             }
         }

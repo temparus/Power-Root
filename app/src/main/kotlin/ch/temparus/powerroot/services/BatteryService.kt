@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.IBinder
 import android.support.v4.content.ContextCompat
 import android.util.Log
-import android.widget.Toast
 import ch.temparus.powerroot.MainActivity
 import ch.temparus.powerroot.R
 import ch.temparus.powerroot.SharedMethods
@@ -126,7 +125,7 @@ class BatteryService : Service() {
         }
 
         mNotificationBuilder!!.mContentText =
-                when(state) {
+                when (state) {
                     CONTROL_STATE_CHARGING -> "Charging"
                     CONTROL_STATE_BOOST -> "Boost Charging"
                     CONTROL_STATE_STOP -> "Charging limit reached"
@@ -161,13 +160,11 @@ class BatteryService : Service() {
         val hasChanged = BatteryService.state != state
         BatteryService.state = state
         if (hasChanged) {
-            Log.d("BatteryService", "State changed to $state")
             stateChange = System.currentTimeMillis()
-            when(state) {
+            when (state) {
                 CONTROL_STATE_STOP,
                 CONTROL_STATE_STOP_FORCED -> {
                     BatteryService.setChargerState(false)
-                    Log.d("BatteryService", "Charger disabled")
                     if (state == CONTROL_STATE_STOP) {
                         mAutoReset = true
                     }
@@ -176,12 +173,10 @@ class BatteryService : Service() {
                 CONTROL_STATE_CHARGING,
                 CONTROL_STATE_BOOST -> {
                     BatteryService.setChargerState(true)
-                    Log.d("BatteryService", "Charger enabled (1)")
                     stopIfUnplugged()
                 }
                 else -> {
                     BatteryService.setChargerState(true)
-                    Log.d("BatteryService", "Charger enabled (2)")
                 }
             }
             updateNotification()
@@ -287,14 +282,9 @@ class BatteryService : Service() {
         }
 
         fun start(context: Context) {
-            Log.d("BatteryService", "Service started! (3)")
             Handler().postDelayed({
-                Log.d("BatteryService", "Service started! (4)")
                 if (SharedMethods.isDevicePluggedIn(context)) {
-                    Log.d("BatteryService", "Service started! (5)")
                     context.startService(Intent(context, BatteryService::class.java))
-                    Log.d("BatteryService", "Service started! (2)")
-                    Toast.makeText(context, "Service started!", Toast.LENGTH_SHORT).show()
                 }
             }, CHARGING_CHANGE_DELAY_MS)
         }
@@ -306,7 +296,11 @@ class BatteryService : Service() {
         }
 
         private fun setChargerState(enabled: Boolean) {
-            SharedMethods.writeControlFile(CONTROL_FILE, if (enabled) { "1" } else { "0" })
+            SharedMethods.writeControlFile(CONTROL_FILE, if (enabled) {
+                "1"
+            } else {
+                "0"
+            })
         }
     }
 }

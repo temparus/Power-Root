@@ -1,16 +1,13 @@
 package ch.temparus.powerroot
 
-
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.View
 import ch.temparus.powerroot.fragments.AboutFragment
 import ch.temparus.powerroot.fragments.ConfigurationFragment
 import ch.temparus.powerroot.services.BatteryService
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,6 +46,6 @@ class MainActivity : AppCompatActivity() {
         transaction.replace(R.id.fragment_container, ConfigurationFragment.newInstance())
         transaction.commit()
 
-        Handler().post({BatteryService.start(this)})
+        Handler().post({ BatteryService.start(this) })
     }
 }

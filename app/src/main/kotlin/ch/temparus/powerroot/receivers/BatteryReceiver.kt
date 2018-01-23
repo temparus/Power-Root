@@ -3,9 +3,7 @@ package ch.temparus.powerroot.receivers
 import android.content.*
 import android.os.BatteryManager
 import android.preference.PreferenceManager
-import android.util.Log
 import ch.temparus.powerroot.services.BatteryService
-
 
 class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver() {
 
@@ -35,7 +33,8 @@ class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver()
 
     private fun reset(configuration: SharedPreferences) {
         limitPercentage = Integer.parseInt(configuration.getString(BatteryService.BATTERY_CHARGE_LIMIT, "80"))
-        rechargePercentage = Integer.parseInt(configuration.getString(BatteryService.BATTERY_RECHARGE_THRESHOLD, (limitPercentage - 5).toString()))
+        rechargePercentage = Integer.parseInt(
+                configuration.getString(BatteryService.BATTERY_RECHARGE_THRESHOLD, (limitPercentage - 5).toString()))
         enabled = configuration.getBoolean(BatteryService.BATTERY_CHARGE_LIMIT_ENABLED, false)
         // manually fire onReceive() to update state if service is enabled
         onReceive(service, service.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)))
@@ -104,7 +103,7 @@ class BatteryReceiver(private val service: BatteryService) : BroadcastReceiver()
         }
     }
 
-    fun getBatteryLevel(batteryIntent: Intent): Int {
+    private fun getBatteryLevel(batteryIntent: Intent): Int {
         val level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         val scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
 
