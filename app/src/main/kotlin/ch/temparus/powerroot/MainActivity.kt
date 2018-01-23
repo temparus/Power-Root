@@ -2,8 +2,10 @@ package ch.temparus.powerroot
 
 
 import android.os.Bundle
+import android.os.Handler
 import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
 import ch.temparus.powerroot.fragments.AboutFragment
 import ch.temparus.powerroot.fragments.ConfigurationFragment
@@ -22,7 +24,6 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.navigation_update -> {
                 // mTextMessage!!.setText(R.string.title_dashboard)
-                BatteryService.start(this)
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_about -> {
@@ -47,5 +48,7 @@ class MainActivity : AppCompatActivity() {
         val transaction = fragmentManager.beginTransaction()
         transaction.replace(R.id.fragment_container, ConfigurationFragment.newInstance())
         transaction.commit()
+
+        Handler().post({BatteryService.start(this)})
     }
 }
