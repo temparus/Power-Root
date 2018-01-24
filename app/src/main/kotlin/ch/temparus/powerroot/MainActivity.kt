@@ -8,6 +8,7 @@ import android.view.View
 import ch.temparus.powerroot.fragments.AboutFragment
 import ch.temparus.powerroot.fragments.ConfigurationFragment
 import ch.temparus.powerroot.services.BatteryService
+import ch.temparus.powerroot.services.ProximityService
 
 class MainActivity : AppCompatActivity() {
 
@@ -46,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         transaction.replace(R.id.fragment_container, ConfigurationFragment.newInstance())
         transaction.commit()
 
-        Handler().post({ BatteryService.start(this) })
+        BatteryService.start(this)
+        ProximityService.start(this)
     }
 }
