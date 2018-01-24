@@ -17,7 +17,7 @@ import ch.temparus.powerroot.services.BatteryService
 /**
  * Notification used by the BatteryService
  */
-class BatteryServiceNotification(private val service: BatteryService) {
+class BatteryNotification(private val service: BatteryService) {
 
     private var mNotificationBuilder: NotificationCompat.Builder
     private var mNotificationId = 1

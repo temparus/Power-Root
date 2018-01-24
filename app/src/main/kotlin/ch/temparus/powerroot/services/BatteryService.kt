@@ -11,7 +11,7 @@ import ch.temparus.powerroot.SharedMethods
 import ch.temparus.powerroot.receivers.BatteryReceiver
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
-import ch.temparus.powerroot.services.notifications.BatteryServiceNotification
+import ch.temparus.powerroot.services.notifications.BatteryNotification
 
 /**
  * An [Service] subclass for asynchronously monitor battery
@@ -19,7 +19,7 @@ import ch.temparus.powerroot.services.notifications.BatteryServiceNotification
  */
 class BatteryService : Service() {
 
-    private var mNotification: BatteryServiceNotification? = null
+    private var mNotification: BatteryNotification? = null
     private var mConfiguration: SharedPreferences? = null
     private var mBatteryReceiver: BatteryReceiver? = null
     private var mAutoReset = false
@@ -37,7 +37,7 @@ class BatteryService : Service() {
         intentFilter.addAction(ACTION_BATTERY_STOP)
         registerReceiver(mBatteryReceiver, intentFilter)
 
-        mNotification = BatteryServiceNotification(this)
+        mNotification = BatteryNotification(this)
         mNotification?.update()
     }
 
