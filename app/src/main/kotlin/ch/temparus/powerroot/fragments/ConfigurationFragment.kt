@@ -15,7 +15,7 @@ class ConfigurationFragment : PreferenceFragment() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         // Load the preferences from an XML resource
-        addPreferencesFromResource(R.xml.configurations)
+        addPreferencesFromResource(R.xml.battery_service)
     }
 
     companion object {
