@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="proximity_lock_cover_time">
+        <item>@string/time_500ms</item>
+        <item>@string/time_1000ms</item>
+        <item>@string/time_1500ms</item>
+        <item>@string/time_2000ms</item>
+        <item>@string/time_5000ms</item>
+    </string-array>
+
+    <string-array name="proximity_lock_cover_time_value">
+        <item>500</item>
+        <item>1000</item>
+        <item>1500</item>
+        <item>2000</item>
+        <item>5000</item>
+    </string-array>
+
+</resources>

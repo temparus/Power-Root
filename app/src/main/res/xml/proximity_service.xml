@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Proximity Sensor">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="proximityEnabled"
+            android:title="@string/proximity_enabled"/>
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="proximityWaveMode"
+            android:title="@string/proximity_wave_mode"
+            android:summary="@string/proximity_wave_mode_summary"/>
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="proximityPocketMode"
+            android:title="@string/proximity_pocket_mode"
+            android:summary="@string/proximity_pocket_mode_summary"/>
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="proximityLockScreen"
+            android:title="@string/proximity_lock_screen"
+            android:summary="@string/proximity_lock_screen_summary"
+            android:disableDependentsState="false"/>
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="proximityLockScreenLandscape"
+            android:title="@string/proximity_lock_screen_landscape"
+            android:summary="@string/proximity_lock_screen_landscape_summary"
+            android:dependency="proximityLockScreen"/>
+
+        <ListPreference
+            android:defaultValue="1000"
+            android:key="proximityLockScreenCoverTime"
+            android:title="@string/proximity_lock_screen_time"
+            android:summary="@string/proximity_lock_screen_time_summary"
+            android:dependency="proximityLockScreen"
+            android:entries="@array/proximity_lock_cover_time"
+            android:entryValues="@array/proximity_lock_cover_time_value"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

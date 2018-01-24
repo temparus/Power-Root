@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Power Root</string>
     <string name="title_home">Home</string>
@@ -24,5 +25,27 @@
     <string name="battery_state_boost_charging">Boost charging</string>
     <string name="battery_state_stopped">Charging limit reached</string>
     <string name="battery_state_interrupted">Charging interrupted by user</string>
+
+    <!-- ProximityService -->
+    <string name="category_proximity">Proximity Sensor</string>
+    <string name="proximity_enabled">Enable proximity sensor actions</string>
+    <string name="proximity_wave_mode">Wave mode</string>
+    <string name="proximity_wave_mode_summary">Turn on screen when you wave over the proximity sensor.</string>
+    <string name="proximity_pocket_mode">Pocket mode</string>
+    <string name="proximity_lock_screen">Lock screen</string>
+    <string name="proximity_pocket_mode_summary">Turn on screen when you take your phone out of your pocket.</string>
+    <string name="proximity_lock_screen_summary">Turn off and lock screen when the proximity sensor is covered.</string>
+    <string name="proximity_lock_screen_landscape">Lock screen in landscape mode</string>
+    <string name="proximity_lock_screen_landscape_summary">Disable this to prevent locking when holding the device horizontally.</string>
+    <string name="proximity_lock_screen_time">Cover time before locking</string>
+    <string name="proximity_lock_screen_time_summary">Period of time proximity sensor has to be covered before locking.</string>
+
+    <!-- time periods -->
+    <string name="time_immediately">Immediately</string>
+    <string name="time_500ms">0.5 seconds</string>
+    <string name="time_1000ms">1 seconds</string>
+    <string name="time_1500ms">1.5 seconds</string>
+    <string name="time_2000ms">2 seconds</string>
+    <string name="time_5000ms">5 seconds</string>
 
 </resources>
