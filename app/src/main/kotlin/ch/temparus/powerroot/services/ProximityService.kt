@@ -4,11 +4,16 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.hardware.Sensor
 import android.os.Handler
 import android.os.IBinder
 import android.preference.PreferenceManager
 import android.util.Log
+import ch.temparus.powerroot.listeners.ProximitySensorListener
 import ch.temparus.powerroot.services.notifications.DefaultNotification
+import android.hardware.SensorManager
+
+
 
 /**
  * An [Service] subclass for asynchronously monitor battery
@@ -16,18 +21,46 @@ import ch.temparus.powerroot.services.notifications.DefaultNotification
  */
 class ProximityService : Service() {
 
-    private var mConfiguration: SharedPreferences? = null
+    private var configuration: SharedPreferences? = null
+    private var proximitySensorListener: ProximitySensorListener? = null
+    private var sensorManager: SensorManager? = null
+    private var proximitySensor: Sensor? = null
+
+
+    private var screenChangeTime: Long = 0
 
     override fun onCreate() {
         Log.d("ProximityService", "Service started!")
         ProximityService.running = true
 
-        mConfiguration = PreferenceManager.getDefaultSharedPreferences(this)
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        proximitySensor = sensorManager!!.getDefaultSensor(Sensor.TYPE_PROXIMITY)
+        configuration = PreferenceManager.getDefaultSharedPreferences(this)
+        proximitySensorListener = ProximitySensorListener(this)
+
+        sensorManager!!.registerListener(proximitySensorListener, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL)
+
         startForeground(DefaultNotification.NOTIFICATION_ID, DefaultNotification.get(this))
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         return START_STICKY
+    }
+
+    fun getLastTimeScreenChange(): Long {
+        return screenChangeTime
+    }
+
+    fun turnOnScreen() {
+        if (ScreenHandler.turnOn(this, SCREEN_TIMEOUT)) {
+            screenChangeTime = System.currentTimeMillis()
+        }
+    }
+
+    fun turnOffScreen() {
+        if (ScreenHandler.turnOff(this)) {
+            screenChangeTime = System.currentTimeMillis()
+        }
     }
 
     override fun onDestroy() {
@@ -42,6 +75,9 @@ class ProximityService : Service() {
     }
 
     companion object {
+
+        // Static configuration
+        const val SCREEN_TIMEOUT: Long = 5000
 
         // SharedPreferences
         const val PREF_ENABLED = "proximityEnabled"
