@@ -4,17 +4,19 @@ import android.content.SharedPreferences
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
+import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
+import ch.temparus.powerroot.SharedMethods
 import ch.temparus.powerroot.services.ProximityService
-import ch.temparus.powerroot.services.ScreenHandler
 
 class ProximitySensorListener(private val service: ProximityService) : SensorEventListener {
 
     private var preferenceChangeListener: android.content.SharedPreferences.OnSharedPreferenceChangeListener? = null
     private val configuration: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(service.baseContext)
+    private val lockScreenRunnable = Runnable { service.turnOffScreen() }
 
-    private var lockScreenCoverTime: Int = 1000
+    private var lockScreenCoverTime: Long = 1000
     private var lockScreenEnabled: Boolean = false
     private var lockScreenLandscape: Boolean = false
     private var waveModeEnabled: Boolean = false
@@ -24,6 +26,7 @@ class ProximitySensorListener(private val service: ProximityService) : SensorEve
     private var lastTime: Long = 0
     private var waveCount = 0
     private var lastWaveTime: Long = 0
+    private val handler = Handler()
 
     init {
         preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
@@ -48,7 +51,7 @@ class ProximitySensorListener(private val service: ProximityService) : SensorEve
     }
 
     private fun reset(configuration: SharedPreferences) {
-        lockScreenCoverTime = Integer.parseInt(configuration.getString(ProximityService.PREF_LOCK_SCREEN_COVER_TIME, "1000"))
+        lockScreenCoverTime = configuration.getString(ProximityService.PREF_LOCK_SCREEN_COVER_TIME, "1000").toLong()
         lockScreenEnabled = configuration.getBoolean(ProximityService.PREF_LOCK_SCREEN, false)
         lockScreenLandscape = configuration.getBoolean(ProximityService.PREF_LOCK_SCREEN_LANDSCAPE, false)
         waveModeEnabled = configuration.getBoolean(ProximityService.PREF_WAVE_MODE, false)
@@ -72,11 +75,14 @@ class ProximitySensorListener(private val service: ProximityService) : SensorEve
         val tookOutOfPocket = timeBetweenFarAndNear > MIN_POCKET_PERIOD
 
         if (uncovered) {
+            handler.removeCallbacks(lockScreenRunnable)
             val timeSinceLastScreenChange = currentTime - service.getLastTimeScreenChange()
+            Log.d("ProximitySensorListener", "lockScreenCoverTime: $lockScreenCoverTime")
             Log.d("ProximitySensorListener", "sensor uncovered!")
             Log.d("ProximitySensorListener", "timeBetweenFarAndNear: $timeBetweenFarAndNear")
             Log.d("ProximitySensorListener", "timeSinceLastScreenChange: $timeSinceLastScreenChange")
             if (timeSinceLastScreenChange > WAITING_PERIOD_BETWEEN_SCREEN_CHANGE) { // Don't do anything if it turned on or off 1.5 seconds ago
+                Log.d("ProximitySensorListener", "sensor toggled!")
                 if (waved && waveModeEnabled) {
                     if (currentTime - lastWaveTime > MAX_WAVE_PERIOD) {
                         // the last wave was a long time ago -> reset wave count
@@ -98,7 +104,10 @@ class ProximitySensorListener(private val service: ProximityService) : SensorEve
             }
         } else if (covered) {
             Log.d("ProximitySensorListener", "sensor covered!")
-            service.turnOffScreen()
+            //if (lockScreenEnabled && (lockScreenLandscape || SharedMethods.isPortrait(service))) {
+                Log.d("ProximitySensorListener", "turn off screen!")
+                handler.postDelayed(lockScreenRunnable, lockScreenCoverTime)
+            //}
         }
 
         lastDistance = currentDistance

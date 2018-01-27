@@ -45,5 +45,7 @@
     <string name="time_1500ms">1.5 seconds</string>
     <string name="time_2000ms">2 seconds</string>
     <string name="time_5000ms">5 seconds</string>
+    <string name="removed_device_admin_rights">Device Administrator rights revoked</string>
+    <string name="lock_admin_rights_explanation">Administrator rights are needed to lock the device.</string>
 
 </resources>

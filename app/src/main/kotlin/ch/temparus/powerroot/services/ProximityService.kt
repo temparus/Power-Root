@@ -12,7 +12,7 @@ import android.util.Log
 import ch.temparus.powerroot.listeners.ProximitySensorListener
 import ch.temparus.powerroot.services.notifications.DefaultNotification
 import android.hardware.SensorManager
-
+import ch.temparus.powerroot.ScreenHandler
 
 
 /**
@@ -53,12 +53,14 @@ class ProximityService : Service() {
 
     fun turnOnScreen() {
         if (ScreenHandler.turnOn(this, SCREEN_TIMEOUT)) {
+            Log.d("ProximitySensor", "turnOnScreen")
             screenChangeTime = System.currentTimeMillis()
         }
     }
 
     fun turnOffScreen() {
         if (ScreenHandler.turnOff(this)) {
+            Log.d("ProximitySensor", "turnOffScreen")
             screenChangeTime = System.currentTimeMillis()
         }
     }

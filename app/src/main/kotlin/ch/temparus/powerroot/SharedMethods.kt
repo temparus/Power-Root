@@ -1,5 +1,8 @@
 package ch.temparus.powerroot
 
+import android.app.Activity
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -9,6 +12,8 @@ import eu.chainfire.libsuperuser.Shell
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+import android.content.res.Configuration
+import ch.temparus.powerroot.receivers.LockScreenAdminReceiver
 
 @Suppress("MemberVisibilityCanBePrivate")
 /**
@@ -52,6 +57,25 @@ object SharedMethods {
 
         return (batteryStatus == BatteryManager.BATTERY_STATUS_CHARGING ||
                 connectionStatus > 0 || hasExternalPowerSupply())
+    }
+
+    fun isPortrait(context: Context): Boolean {
+        val orientation = context.resources.configuration.orientation
+        return orientation == Configuration.ORIENTATION_PORTRAIT || orientation == Configuration.ORIENTATION_UNDEFINED
+    }
+
+    fun requestLockScreenAdminRights(activity: Activity, requestCode: Int) {
+        val lockScreenAdminComponentName = ComponentName(activity, LockScreenAdminReceiver::class.java)
+        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, lockScreenAdminComponentName)
+        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, R.string.lock_admin_rights_explanation)
+        activity.startActivityForResult(intent, requestCode)
+    }
+
+    fun revokeDeviceAdminPermission(activity: Activity) {
+        val devAdminReceiver = ComponentName(activity, LockScreenAdminReceiver::class.java)
+        val dpm = activity.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        dpm.removeActiveAdmin(devAdminReceiver)
     }
 
     private fun hasExternalPowerSupply(): Boolean {

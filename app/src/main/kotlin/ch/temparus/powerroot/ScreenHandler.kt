@@ -1,8 +1,7 @@
-package ch.temparus.powerroot.services
+package ch.temparus.powerroot
 
 import android.content.Context
 import android.os.PowerManager
-import ch.temparus.powerroot.SharedMethods
 
 @Suppress("MemberVisibilityCanBePrivate")
 object ScreenHandler {
