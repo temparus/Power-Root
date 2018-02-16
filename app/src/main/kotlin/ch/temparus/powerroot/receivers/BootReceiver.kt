@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import ch.temparus.powerroot.SharedMethods
 import ch.temparus.powerroot.services.BatteryService
+import ch.temparus.powerroot.services.SystemUpdaterService
 
 class BootReceiver : BroadcastReceiver() {
 
@@ -12,5 +13,6 @@ class BootReceiver : BroadcastReceiver() {
         if (Intent.ACTION_BOOT_COMPLETED == intent.action && SharedMethods.isDevicePluggedIn(context)) {
             BatteryService.start(context)
         }
+        SystemUpdaterService.start(context)
     }
 }

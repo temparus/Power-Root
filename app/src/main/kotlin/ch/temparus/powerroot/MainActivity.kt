@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import ch.temparus.powerroot.fragments.AboutFragment
 import ch.temparus.powerroot.fragments.ConfigurationFragment
+import ch.temparus.powerroot.fragments.SystemUpdaterFragment
 import ch.temparus.powerroot.services.BatteryService
 
 class MainActivity : AppCompatActivity() {
@@ -20,11 +21,12 @@ class MainActivity : AppCompatActivity() {
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_update -> {
-                // mTextMessage!!.setText(R.string.title_dashboard)
+                val transaction = fragmentManager.beginTransaction()
+                transaction.replace(R.id.fragment_container, SystemUpdaterFragment.newInstance())
+                transaction.commit()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_about -> {
-                // mTextMessage!!.setText(R.string.title_notifications)
                 val transaction = fragmentManager.beginTransaction()
                 transaction.replace(R.id.fragment_container, AboutFragment.newInstance())
                 // transaction.addToBackStack(null)
