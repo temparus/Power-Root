@@ -4,11 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.util.Log
 import ch.temparus.powerroot.services.BatteryService
 import eu.chainfire.libsuperuser.Shell
-import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.locks.ReentrantLock
+
 
 @Suppress("MemberVisibilityCanBePrivate")
 /**
@@ -24,15 +26,11 @@ object SharedMethods {
     }
 
     fun readControlFile(file: String): List<String> {
-        val content: List<String>
-        try {
-            val inputStream = FileInputStream(File(file))
-            content = inputStream.bufferedReader().use { it.readText() }.split('\n')
-            inputStream.close()
+        return try {
+            Shell.SU.run("cat $file")
         } catch (ex: IOException) {
-            return listOf()
+            listOf()
         }
-        return content
     }
 
     fun executeRootCommand(command: String) {
@@ -54,16 +52,19 @@ object SharedMethods {
                 connectionStatus > 0 || hasExternalPowerSupply())
     }
 
+    private fun loadPowerSupplyPathList() {
+        val powerSupplyDirectory = BatteryService.POWER_SUPPLY_DIRECTORY
+        val directoryContent = Shell.SU.run("find -L $powerSupplyDirectory -maxdepth 1 -type d")
+        if (!directoryContent.isEmpty() && directoryContent[0] == powerSupplyDirectory) {
+            directoryContent.removeAt(0)
+        }
+        powerSupplyPathList = directoryContent
+    }
+
     private fun hasExternalPowerSupply(): Boolean {
         if (powerSupplyPathList == null) {
-            val powerSupplyDirectory = BatteryService.POWER_SUPPLY_DIRECTORY
-
             try {
-                val directoryContent = Shell.SU.run("find -L $powerSupplyDirectory -maxdepth 1 -type d")
-                if (!directoryContent.isEmpty() && directoryContent[0] == powerSupplyDirectory) {
-                    directoryContent.removeAt(0)
-                }
-                powerSupplyPathList = directoryContent
+                loadPowerSupplyPathList()
             } catch (e: Exception) {
                 return true
             }

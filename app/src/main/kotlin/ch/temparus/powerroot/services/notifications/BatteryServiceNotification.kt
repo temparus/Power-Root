@@ -69,14 +69,15 @@ class BatteryServiceNotification(private val service: BatteryService) {
     fun update(): Boolean {
         mNotificationBuilder.mActions.clear()
 
-        val state = service.getControlState()
+        val connectionState = service.getConnectionState()
+        val controlState = service.getControlState()
 
-        if (state == BatteryService.CONTROL_STATE_DISABLED || state == BatteryService.CONTROL_STATE_UNKNOWN) {
+        if (connectionState != BatteryService.CONNECTION_STATE_CONNECTED || controlState == BatteryService.CONTROL_STATE_DISABLED || controlState == BatteryService.CONTROL_STATE_UNKNOWN) {
             service.stopForeground(true)
             return false
         }
 
-        if (state == BatteryService.CONTROL_STATE_STOP_FORCED) {
+        if (controlState == BatteryService.CONTROL_STATE_STOP_FORCED) {
             val chargePendingIntent = PendingIntent.getBroadcast(
                     service,
                     0,
@@ -88,7 +89,7 @@ class BatteryServiceNotification(private val service: BatteryService) {
                     chargePendingIntent))
         }
 
-        if (state == BatteryService.CONTROL_STATE_CHARGING || state == BatteryService.CONTROL_STATE_BOOST) {
+        if (controlState == BatteryService.CONTROL_STATE_CHARGING || controlState == BatteryService.CONTROL_STATE_BOOST) {
             val chargePendingIntent = PendingIntent.getBroadcast(
                     service,
                     0,
@@ -100,7 +101,7 @@ class BatteryServiceNotification(private val service: BatteryService) {
                     chargePendingIntent))
         }
 
-        if (state == BatteryService.CONTROL_STATE_STOP || state == BatteryService.CONTROL_STATE_STOP_FORCED || state == BatteryService.CONTROL_STATE_CHARGING) {
+        if (controlState == BatteryService.CONTROL_STATE_STOP || controlState == BatteryService.CONTROL_STATE_STOP_FORCED || controlState == BatteryService.CONTROL_STATE_CHARGING) {
             val boostPendingIntent = PendingIntent.getBroadcast(
                     service,
                     0,
@@ -112,14 +113,13 @@ class BatteryServiceNotification(private val service: BatteryService) {
                     boostPendingIntent))
         }
 
-        mNotificationBuilder.mContentText =
-                when (state) {
-                    BatteryService.CONTROL_STATE_CHARGING -> service.getString(R.string.battery_state_charging)
-                    BatteryService.CONTROL_STATE_BOOST -> service.getString(R.string.battery_state_boost_charging)
-                    BatteryService.CONTROL_STATE_STOP -> service.getString(R.string.battery_state_stopped)
-                    BatteryService.CONTROL_STATE_STOP_FORCED -> service.getString(R.string.battery_state_interrupted)
-                    else -> ""
-                }
+        mNotificationBuilder.setContentText(when (controlState) {
+                BatteryService.CONTROL_STATE_CHARGING -> service.getString(R.string.battery_state_charging)
+                BatteryService.CONTROL_STATE_BOOST -> service.getString(R.string.battery_state_boost_charging)
+                BatteryService.CONTROL_STATE_STOP -> service.getString(R.string.battery_state_stopped)
+                BatteryService.CONTROL_STATE_STOP_FORCED -> service.getString(R.string.battery_state_interrupted)
+                else -> ""
+            })
 
         service.startForeground(mNotificationId, mNotificationBuilder.build())
         return true
